@@ -12,3 +12,12 @@ dotenv = "0.15.0"
 ethers = "2.0.14"
 serde_json = "1.0.117"
 actix-cors = "0.7.0"
+actix-rt = "2.10.0"
+
+[dev-dependencies]
+actix-rt = "2.10.0"
+criterion = "0.5.1"
+
+[[bench]]
+name= "centralized"
+harness = false

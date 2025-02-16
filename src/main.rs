@@ -2,29 +2,16 @@ use accumulator::{group::Rsa2048, Accumulator, Witness};
 use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use actix_cors::Cors;
 use actix_web::web::Data;
-use ethers::core::rand;
-use private_decentralized_lottery::request_vrf;
+use ethers::types::H256;
+use private_decentralized_lottery::{add_name_wrapper, get_random_number, request_vrf};
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
-
 struct AppState {
     names: Vec<String>,
     winner_number: Option<usize>,
     accumulator: Accumulator<Rsa2048, String>,
-}
-
-async fn add_name(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) -> impl Responder {
-    let mut app_state = data.lock().unwrap();
-
-    // Add the name to the names list
-    let name_string = name.into_inner();
-    app_state.names.push(name_string.clone());
-
-    // Update the accumulator
-    app_state.accumulator = app_state.accumulator.clone().add(&[name_string.clone()]);
-
-    HttpResponse::Ok().body("Name added")
+    commitment: H256,
 }
 
 async fn start_lottery(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder {
@@ -33,20 +20,21 @@ async fn start_lottery(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder 
         return HttpResponse::BadRequest().body("No names in the lottery");
     }
 
-    //  = rand::random::<usize>() % app_state.names.len();
-    // select random number using request_vrf(commitment: H256)
     let commitment = format!("{:?}", app_state.accumulator.clone()).into_bytes();
     let mut commitment_array = [0u8; 32];
     commitment_array.copy_from_slice(&commitment[..32]);
+    app_state.commitment = commitment_array.into();
     // get actual vrf output
-    let winner: usize = request_vrf(commitment_array.into()).await.unwrap();
-    app_state.winner_number = Some(winner);
+    request_vrf(commitment_array.into()).await.unwrap();
 
-    HttpResponse::Ok().json("Lottery started")
+    HttpResponse::Ok().json("Lottery started, VRF request sent")
 }
 
 async fn announce_winner(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder {
-    let app_state = data.lock().unwrap();
+    let mut app_state = data.lock().unwrap();
+    
+    let winner = get_random_number(app_state.commitment).await.unwrap();
+    app_state.winner_number = Some(winner.as_usize());
 
     if let Some(winner_index) = app_state.winner_number {
         if let Some(winner) = app_state.names.get(winner_index) {
@@ -67,7 +55,7 @@ async fn verify(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) 
         .unwrap();
     let proof_witness: accumulator::MembershipProof<Rsa2048, String> = app_state.accumulator.prove_membership(&[(name.to_string(), witness)]).unwrap();
     let result: bool = app_state.accumulator.verify_membership(&name, &proof_witness);
-    if result {;
+    if result {
         HttpResponse::Ok().body(format!("Selected name '{}' is in with proof: {:?}", name, proof_witness))
     } else {
         HttpResponse::NotFound().body("Name not found")
@@ -80,6 +68,7 @@ async fn main() -> std::io::Result<()> {
         names: Vec::new(),
         winner_number: None,
         accumulator: Accumulator::<Rsa2048, String>::empty(),
+        commitment: H256::zero(),
     }));
 
     HttpServer::new(move || {
@@ -91,7 +80,7 @@ async fn main() -> std::io::Result<()> {
                 .allow_any_method() // Allow all HTTP methods
                 .allow_any_header(), // Allow all headers
         )
-            .route("/add", web::post().to(add_name))
+            .route("/add", web::post().to(add_name_wrapper))
             .route("/start_lottery", web::post().to(start_lottery))
             .route("/announce_winner", web::get().to(announce_winner))
             .route("/verify", web::post().to(verify))

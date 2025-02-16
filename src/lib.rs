@@ -1,34 +1,44 @@
-use std::{ fs::{self, OpenOptions}, io::{self, BufRead, Write}};
-use accumulator::{group::Rsa2048, Witness};
-use accumulator::Accumulator;
-use std::fs::File;
-use std::io::{BufReader};
+use std::{fs, sync::Mutex};
+use accumulator::{group::Rsa2048, Accumulator};
+use actix_web::{web, HttpResponse, Responder};
 use dotenv::dotenv;
 use ethers::prelude::*;
 use ethers::abi::Abi;
 use serde_json::{self};
 use std::{env, sync::Arc};
 
+pub struct AppState {
+    pub names: Vec<String>,
+    pub accumulator: Accumulator<Rsa2048, String>,
+}
 
-pub fn add_names_to_accumulator<'a>(acc: &mut Accumulator<Rsa2048, &'a str>, names: &'a Vec<String>) {
-    for i in names.iter() {
-        let name_str: &str = i.as_str();
-        *acc = acc.clone().add(&[name_str]);
+impl AppState {
+    pub fn new() -> Self {
+        // Initialize an empty accumulator for Rsa2048
+        let accumulator = Accumulator::<Rsa2048, String>::empty();
+
+        Self {
+            names: Vec::new(),
+            accumulator,
+        }
     }
 }
 
-pub fn retrieve_names() -> Vec<String> {
-    let file: File = File::open("./src/names.txt").unwrap();
-    let reader: BufReader<File> = BufReader::new(file);
+pub async fn add_name_wrapper(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) -> impl Responder {
+    let mut app_state = data.lock().unwrap();
 
-    let mut names: Vec<String> = Vec::new();
+    // Add the name to the names list
+    add_name(name, app_state);
 
-    for (index, line) in reader.lines().enumerate() {
-        let line: String = line.unwrap();
-        let test: String = format!("{}:{}", line, index);
-        names.push(test);
-    }
-    names
+    HttpResponse::Ok().body("Name added")
+}
+
+pub fn add_name(name: web::Json<String>, mut app_state: std::sync::MutexGuard<'_, AppState>) {
+    let name_string = name.into_inner();
+    app_state.names.push(name_string.clone());
+
+    // Update the accumulator
+    app_state.accumulator = app_state.accumulator.clone().add(&[name_string.clone()]);
 }
 
 pub async fn request_vrf(commitment: H256) -> Result<(), Box<dyn std::error::Error>> {
@@ -44,7 +54,7 @@ pub async fn request_vrf(commitment: H256) -> Result<(), Box<dyn std::error::Err
         .with_chain_id(Chain::Sepolia);
     let client = SignerMiddleware::new(provider.clone(), wallet.clone());
 
-    let abi_json: String = fs::read_to_string("../abi.json")?;
+    let abi_json: String = fs::read_to_string("abi.json")?;
     let abi: Abi = serde_json::from_str(&abi_json)?;
     let contract = Contract::new(vrf_contract, abi, Arc::new(client));
 
@@ -70,7 +80,7 @@ pub async fn get_random_number(commitment: H256) -> Result<U256, Box<dyn std::er
         .with_chain_id(Chain::Sepolia);
     let client = SignerMiddleware::new(provider.clone(), wallet.clone());
 
-    let abi_json = fs::read_to_string("../abi.json")?;
+    let abi_json = fs::read_to_string("abi.json")?;
     let abi: Abi = serde_json::from_str(&abi_json)?;
     let contract = Contract::new(contract_address, abi, Arc::new(client));
 
