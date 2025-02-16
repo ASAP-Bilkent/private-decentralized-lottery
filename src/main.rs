@@ -3,6 +3,7 @@ use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use actix_cors::Cors;
 use actix_web::web::Data;
 use ethers::core::rand;
+use private_decentralized_lottery::request_vrf;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
@@ -32,7 +33,13 @@ async fn start_lottery(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder 
         return HttpResponse::BadRequest().body("No names in the lottery");
     }
 
-    let winner = rand::random::<usize>() % app_state.names.len();
+    //  = rand::random::<usize>() % app_state.names.len();
+    // select random number using request_vrf(commitment: H256)
+    let commitment = format!("{:?}", app_state.accumulator.clone()).into_bytes();
+    let mut commitment_array = [0u8; 32];
+    commitment_array.copy_from_slice(&commitment[..32]);
+    // get actual vrf output
+    let winner: usize = request_vrf(commitment_array.into()).await.unwrap();
     app_state.winner_number = Some(winner);
 
     HttpResponse::Ok().json("Lottery started")
@@ -54,14 +61,14 @@ async fn announce_winner(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responde
 
 async fn verify(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) -> impl Responder {
     let app_state = data.lock().unwrap();
-    let mut witness: Witness<Rsa2048, &str> = Witness(Accumulator::empty());
+    let mut witness: Witness<Rsa2048, String> = Witness(Accumulator::empty());
     witness = witness
-        .compute_subset_witness(&app_state.names, &[&name])
+        .compute_subset_witness(&app_state.names.iter().map(|s| s.to_string()).collect::<Vec<String>>(), &[name.to_string()])
         .unwrap();
-    let proof_witness: accumulator::MembershipProof<Rsa2048, &str> = app_state.accumulator.prove_membership(&[(selected_name, witness)]).unwrap();
-    let result: bool = app_state.accumulator.verify_membership(&selected_name, &proof_witness);
+    let proof_witness: accumulator::MembershipProof<Rsa2048, String> = app_state.accumulator.prove_membership(&[(name.to_string(), witness)]).unwrap();
+    let result: bool = app_state.accumulator.verify_membership(&name, &proof_witness);
     if result {;
-        HttpResponse::Ok().body(format!("Selected name '{}' is in with proof: {:?}", selected_name, proof_witness))
+        HttpResponse::Ok().body(format!("Selected name '{}' is in with proof: {:?}", name, proof_witness))
     } else {
         HttpResponse::NotFound().body("Name not found")
     }

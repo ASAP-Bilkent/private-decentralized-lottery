@@ -56,28 +56,3 @@ pub async fn request_vrf(commitment: H256) -> Result<(), Box<dyn std::error::Err
 
     Ok(())
 }
-
-// The Add functionality: Adds a username to the file
-pub fn add(name: &str) -> Result<String, io::Error> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .create(true)
-        .open("names.txt")?;
-    
-    writeln!(file, "{}", name)?;
-    Ok(format!("Added {} successfully", name))
-}
-
-// The Validate functionality: Placeholder, you can define the actual logic
-pub fn validate() -> Result<String, io::Error> {
-    // Define your logic for validating
-    let mut witness: Witness<Rsa2048, &str> = Witness(Accumulator::empty());
-    let names = retrieve_names();
-    let names_str_slice: Vec<&str> = names.iter().map(|s: &String| s.as_str()).collect();
-    witness = witness
-        .compute_subset_witness(&names_str_slice, &[&names[0]])
-        .unwrap();
-    Ok("Validate action executed successfully".to_string())
-}
-
