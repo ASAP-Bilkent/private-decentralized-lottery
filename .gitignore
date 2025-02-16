@@ -1,0 +1,6 @@
+/target
+._*
+.env
+accumulator
+frontend/package-lock.json
+frontend/yarn.lock
