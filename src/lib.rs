@@ -1,17 +1,14 @@
-use std::fs;
 use dotenv::dotenv;
-use ethers::prelude::*;
 use ethers::abi::Abi;
+use ethers::prelude::*;
 use serde_json::{self};
+use std::fs;
 use std::{env, sync::Arc};
-
-
-
 
 pub async fn request_vrf(commitment: H256) -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
 
-    let vrf_contract: H160 = "0xc81228e835DDef6E0F08D91bC714213B371Ad4c3".parse::<Address>()?;
+    let vrf_contract: H160 = "0xC811D13F35A3240e0Fcf7D28Ed0A92f617B44752".parse::<Address>()?;
     let priv_key: String = env::var("PRIVATE_KEY").unwrap();
     let rpc_url: String = env::var("RPC_URL").unwrap();
     let provider: Provider<Http> = Provider::<Http>::try_from(rpc_url)?;
@@ -37,7 +34,7 @@ pub async fn request_vrf(commitment: H256) -> Result<(), Box<dyn std::error::Err
 pub async fn get_random_number(commitment: H256) -> Result<U256, Box<dyn std::error::Error>> {
     dotenv().ok();
 
-    let contract_address = "0xc81228e835DDef6E0F08D91bC714213B371Ad4c3".parse::<Address>()?;
+    let contract_address = "0xC811D13F35A3240e0Fcf7D28Ed0A92f617B44752".parse::<Address>()?;
     let priv_key = env::var("PRIVATE_KEY").unwrap();
     let rpc_url = env::var("RPC_URL").unwrap();
     let provider = Provider::<Http>::try_from(rpc_url)?;

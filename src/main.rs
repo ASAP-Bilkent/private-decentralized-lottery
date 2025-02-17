@@ -1,6 +1,6 @@
 use accumulator::{group::Rsa2048, Accumulator, Witness};
-use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use actix_cors::Cors;
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use ethers::types::{H256, U256};
 use std::sync::{Arc, Mutex};
 
@@ -30,7 +30,7 @@ async fn start_lottery(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder 
 
 async fn announce_winner(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder {
     let mut app_state = data.lock().unwrap();
-    
+
     let winner: U256 = U256::from(0);
     // let winner = get_random_number(app_state.commitment).await.unwrap();
     app_state.winner_number = Some(winner.as_usize());
@@ -48,39 +48,73 @@ async fn announce_winner(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responde
 
 async fn verify(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) -> impl Responder {
     let app_state = data.lock().unwrap();
+
     let mut witness: Witness<Rsa2048, String> = Witness(Accumulator::<Rsa2048, String>::empty());
+
     let names_str_slice: Vec<String> = app_state.names.iter().map(|s: &String| s.clone()).collect();
     println!("Names: {:?}", app_state.names);
-    witness = witness
-        .compute_subset_witness(&names_str_slice, &[name.to_string()])
-        .unwrap();
-    println!("Witness: {:?}", witness);
-    let proof_witness= app_state.accumulator.prove_membership(&[(name.to_string(), witness)]).unwrap();
+    println!("Verifying name: {:?}", name.to_string());
+
+    match witness.compute_subset_witness(&names_str_slice, &[name.to_string()]) {
+        Ok(w) => {
+            witness = w;
+            println!("Witness: {:?}", witness);
+        }
+        Err(e) => {
+            println!("Error computing witness: {:?}", e);
+            return HttpResponse::InternalServerError().body("Failed to compute witness");
+        }
+    }
+
+    let proof_witness = match app_state
+        .accumulator
+        .prove_membership(&[(name.to_string(), witness)])
+    {
+        Ok(p) => p,
+        Err(e) => {
+            println!("Error proving membership: {:?}", e);
+            return HttpResponse::InternalServerError().body("Failed to prove membership");
+        }
+    };
     println!("Proof: {:?}", proof_witness);
-    let result: bool = app_state.accumulator.verify_membership(&name, &proof_witness);
+
+    let result: bool = app_state
+        .accumulator
+        .verify_membership(&name, &proof_witness);
     println!("Result: {:?}", result);
-   if result {
-        HttpResponse::Ok().body(format!("Selected name '{}' is in with proof: {:?}", name, proof_witness))
+
+    if result {
+        HttpResponse::Ok().body(format!(
+            "Selected name '{}' is in with proof: {:?}",
+            name, proof_witness
+        ))
     } else {
         HttpResponse::NotFound().body("Name not found")
     }
 }
 
-async fn add_name_wrapper(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) -> impl Responder {
+async fn add_name_wrapper(
+    data: web::Data<Arc<Mutex<AppState>>>,
+    name: web::Json<String>,
+) -> impl Responder {
     let mut app_state = data.lock().unwrap();
     let name_string = name.into_inner();
-    
+
     // Add the name to the names list
     app_state.names.push(name_string.clone());
-    
+
     // Add the name to the accumulator
-    add_name(&mut app_state.accumulator, name_string.clone());
+    app_state.accumulator = add_name(&mut app_state.accumulator, name_string.clone());
 
     HttpResponse::Ok().body("Name added")
 }
 
-fn add_name(accumulator: &mut Accumulator<Rsa2048, String>, name: String) {
-    accumulator.clone().add(&[name]);
+fn add_name(
+    accumulator: &mut Accumulator<Rsa2048, String>,
+    name: String,
+) -> Accumulator<Rsa2048, String> {
+    let new_acc = accumulator.clone().add(&[name]);
+    new_acc
 }
 
 #[actix_web::main]

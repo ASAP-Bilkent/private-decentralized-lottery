@@ -26,7 +26,7 @@ contract VRFCekilis is VRFConsumerBaseV2Plus {
         s_subscriptionId = subscriptionId;
     }
 
-    function requestRandomWords(bytes32 _commitment) external onlyOwner {
+    function requestRandomWords(bytes32 _commitment) external {
         uint256 _requestId = s_vrfCoordinator.requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
                 keyHash: keyHash,
