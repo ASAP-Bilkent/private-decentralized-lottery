@@ -62,9 +62,13 @@ async fn verify(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) 
     }
 }
 
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-     let app_state = Arc::new(Mutex::new(AppState {
+    std::env::set_var("RUST_LOG", "debug");
+    env_logger::init();
+
+    let app_state = Arc::new(Mutex::new(AppState {
         names: Vec::new(),
         winner_number: None,
         accumulator: Accumulator::<Rsa2048, String>::empty(),
@@ -74,12 +78,12 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(app_state.clone()))
-             .wrap(
-            Cors::default()
-                .allow_any_origin() // Allow requests from any origin
-                .allow_any_method() // Allow all HTTP methods
-                .allow_any_header(), // Allow all headers
-        )
+            .wrap(
+                Cors::default()
+                    .allow_any_origin() // Allow requests from any origin
+                    .allow_any_method() // Allow all HTTP methods
+                    .allow_any_header(), // Allow all headers
+            )
             .route("/add", web::post().to(add_name_wrapper))
             .route("/start_lottery", web::post().to(start_lottery))
             .route("/announce_winner", web::get().to(announce_winner))
