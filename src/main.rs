@@ -1,9 +1,7 @@
 use accumulator::{group::Rsa2048, Accumulator, Witness};
 use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use actix_cors::Cors;
-use actix_web::web::Data;
-use ethers::types::H256;
-use private_decentralized_lottery::{add_name_wrapper, get_random_number, request_vrf};
+use ethers::types::{H256, U256};
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
@@ -25,7 +23,7 @@ async fn start_lottery(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder 
     commitment_array.copy_from_slice(&commitment[..32]);
     app_state.commitment = commitment_array.into();
     // get actual vrf output
-    request_vrf(commitment_array.into()).await.unwrap();
+    // request_vrf(commitment_array.into()).await.unwrap();
 
     HttpResponse::Ok().json("Lottery started, VRF request sent")
 }
@@ -33,7 +31,8 @@ async fn start_lottery(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder 
 async fn announce_winner(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder {
     let mut app_state = data.lock().unwrap();
     
-    let winner = get_random_number(app_state.commitment).await.unwrap();
+    let winner: U256 = U256::from(0);
+    // let winner = get_random_number(app_state.commitment).await.unwrap();
     app_state.winner_number = Some(winner.as_usize());
 
     if let Some(winner_index) = app_state.winner_number {
@@ -49,35 +48,56 @@ async fn announce_winner(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responde
 
 async fn verify(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) -> impl Responder {
     let app_state = data.lock().unwrap();
-    let mut witness: Witness<Rsa2048, String> = Witness(Accumulator::empty());
+    let mut witness: Witness<Rsa2048, String> = Witness(Accumulator::<Rsa2048, String>::empty());
+    let names_str_slice: Vec<String> = app_state.names.iter().map(|s: &String| s.clone()).collect();
+    println!("Names: {:?}", app_state.names);
     witness = witness
-        .compute_subset_witness(&app_state.names.iter().map(|s| s.to_string()).collect::<Vec<String>>(), &[name.to_string()])
+        .compute_subset_witness(&names_str_slice, &[name.to_string()])
         .unwrap();
-    let proof_witness: accumulator::MembershipProof<Rsa2048, String> = app_state.accumulator.prove_membership(&[(name.to_string(), witness)]).unwrap();
+    println!("Witness: {:?}", witness);
+    let proof_witness= app_state.accumulator.prove_membership(&[(name.to_string(), witness)]).unwrap();
+    println!("Proof: {:?}", proof_witness);
     let result: bool = app_state.accumulator.verify_membership(&name, &proof_witness);
-    if result {
+    println!("Result: {:?}", result);
+   if result {
         HttpResponse::Ok().body(format!("Selected name '{}' is in with proof: {:?}", name, proof_witness))
     } else {
         HttpResponse::NotFound().body("Name not found")
     }
 }
 
+async fn add_name_wrapper(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) -> impl Responder {
+    let mut app_state = data.lock().unwrap();
+    let name_string = name.into_inner();
+    
+    // Add the name to the names list
+    app_state.names.push(name_string.clone());
+    
+    // Add the name to the accumulator
+    add_name(&mut app_state.accumulator, name_string.clone());
+
+    HttpResponse::Ok().body("Name added")
+}
+
+fn add_name(accumulator: &mut Accumulator<Rsa2048, String>, name: String) {
+    accumulator.clone().add(&[name]);
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();
 
-    let app_state = Arc::new(Mutex::new(AppState {
+    let app_state = web::Data::new(Arc::new(Mutex::new(AppState {
         names: Vec::new(),
         winner_number: None,
         accumulator: Accumulator::<Rsa2048, String>::empty(),
         commitment: H256::zero(),
-    }));
+    })));
 
     HttpServer::new(move || {
         App::new()
-            .app_data(Data::new(app_state.clone()))
+            .app_data(app_state.clone())
             .wrap(
                 Cors::default()
                     .allow_any_origin() // Allow requests from any origin

@@ -1,45 +1,12 @@
-use std::{fs, sync::Mutex};
-use accumulator::{group::Rsa2048, Accumulator};
-use actix_web::{web, HttpResponse, Responder};
+use std::fs;
 use dotenv::dotenv;
 use ethers::prelude::*;
 use ethers::abi::Abi;
 use serde_json::{self};
 use std::{env, sync::Arc};
 
-pub struct AppState {
-    pub names: Vec<String>,
-    pub accumulator: Accumulator<Rsa2048, String>,
-}
 
-impl AppState {
-    pub fn new() -> Self {
-        // Initialize an empty accumulator for Rsa2048
-        let accumulator = Accumulator::<Rsa2048, String>::empty();
 
-        Self {
-            names: Vec::new(),
-            accumulator,
-        }
-    }
-}
-
-pub async fn add_name_wrapper(data: web::Data<Arc<Mutex<AppState>>>, name: web::Json<String>) -> impl Responder {
-    let mut app_state = data.lock().unwrap();
-
-    // Add the name to the names list
-    add_name(name, app_state);
-
-    HttpResponse::Ok().body("Name added")
-}
-
-pub fn add_name(name: web::Json<String>, mut app_state: std::sync::MutexGuard<'_, AppState>) {
-    let name_string = name.into_inner();
-    app_state.names.push(name_string.clone());
-
-    // Update the accumulator
-    app_state.accumulator = app_state.accumulator.clone().add(&[name_string.clone()]);
-}
 
 pub async fn request_vrf(commitment: H256) -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
