@@ -2,6 +2,7 @@ use accumulator::{group::Rsa2048, Accumulator, Witness};
 use actix_cors::Cors;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use ethers::types::{H256, U256};
+use private_decentralized_lottery::add_name;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
@@ -109,13 +110,7 @@ async fn add_name_wrapper(
     HttpResponse::Ok().body("Name added")
 }
 
-fn add_name(
-    accumulator: &mut Accumulator<Rsa2048, String>,
-    name: String,
-) -> Accumulator<Rsa2048, String> {
-    let new_acc = accumulator.clone().add(&[name]);
-    new_acc
-}
+
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

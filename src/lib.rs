@@ -1,9 +1,19 @@
+use accumulator::group::Rsa2048;
+use accumulator::Accumulator;
 use dotenv::dotenv;
 use ethers::abi::Abi;
 use ethers::prelude::*;
 use serde_json::{self};
 use std::fs;
 use std::{env, sync::Arc};
+
+pub fn add_name(
+    accumulator: &mut Accumulator<Rsa2048, String>,
+    name: String,
+) -> Accumulator<Rsa2048, String> {
+    let new_acc = accumulator.clone().add(&[name]);
+    new_acc
+}
 
 pub async fn request_vrf(commitment: H256) -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
