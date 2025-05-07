@@ -52,12 +52,11 @@ pub fn benchmark_add_name_with_1000(c: &mut Criterion) {
     });
 }
 
-
 criterion_group!(
     benches,
     benchmark_add_name,
     benchmark_add_name_with_50,
-    benchmark_add_name_with_1000
+    benchmark_add_name_with_1000,
 );
 criterion_main!(benches);
 

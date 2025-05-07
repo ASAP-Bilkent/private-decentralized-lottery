@@ -31,6 +31,7 @@ const LotteryComponent = () => {
   };
 
   const handleStartLottery = async () => {
+    setLotteryStatus("Requesting lottery start...");
     try {
       const response = await fetch("http://localhost:8080/start_lottery", {
         method: "POST",
@@ -96,7 +97,7 @@ const LotteryComponent = () => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter name"
-          className="border px-2 py-1"
+          className="border px-2 py-1 text-black"
         />
       </div>
 

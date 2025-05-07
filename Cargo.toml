@@ -20,5 +20,9 @@ actix-rt = "2.10.0"
 criterion = "0.5.1"
 
 [[bench]]
-name= "centralized"
+name= "add"
+harness = false
+
+[[bench]]
+name = "verify"
 harness = false

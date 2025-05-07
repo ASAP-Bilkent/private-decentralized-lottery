@@ -42,6 +42,7 @@ pub async fn request_vrf(commitment: H256) -> Result<(), Box<dyn std::error::Err
 }
 
 pub async fn get_random_number(commitment: H256) -> Result<U256, Box<dyn std::error::Error>> {
+    println!("check 1");
     dotenv().ok();
 
     let contract_address = "0xC811D13F35A3240e0Fcf7D28Ed0A92f617B44752".parse::<Address>()?;
@@ -57,12 +58,14 @@ pub async fn get_random_number(commitment: H256) -> Result<U256, Box<dyn std::er
     let abi_json = fs::read_to_string("abi.json")?;
     let abi: Abi = serde_json::from_str(&abi_json)?;
     let contract = Contract::new(contract_address, abi, Arc::new(client));
-
+    
+    println!("check 2");
     // Call the commitmentRandomness mapping
     let random_number: U256 = contract
         .method::<_, U256>("commitmentRandomness", commitment)?
         .call()
         .await?;
-
+    
+    println!("check 3");
     Ok(random_number)
 }

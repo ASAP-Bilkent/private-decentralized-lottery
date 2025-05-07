@@ -2,11 +2,11 @@ use accumulator::{group::Rsa2048, Accumulator, Witness};
 use actix_cors::Cors;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use ethers::types::{H256, U256};
-use private_decentralized_lottery::add_name;
+use private_decentralized_lottery::{add_name, get_random_number, request_vrf};
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
-struct AppState {
+pub struct AppState {
     names: Vec<String>,
     winner_number: Option<usize>,
     accumulator: Accumulator<Rsa2048, String>,
@@ -24,7 +24,7 @@ async fn start_lottery(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responder 
     commitment_array.copy_from_slice(&commitment[..32]);
     app_state.commitment = commitment_array.into();
     // get actual vrf output
-    // request_vrf(commitment_array.into()).await.unwrap();
+    request_vrf(commitment_array.into()).await.unwrap();
 
     HttpResponse::Ok().json("Lottery started, VRF request sent")
 }
@@ -33,7 +33,7 @@ async fn announce_winner(data: web::Data<Arc<Mutex<AppState>>>) -> impl Responde
     let mut app_state = data.lock().unwrap();
 
     let winner: U256 = U256::from(0);
-    // let winner = get_random_number(app_state.commitment).await.unwrap();
+    // let winner: U256 = get_random_number(app_state.commitment).await.unwrap();
     app_state.winner_number = Some(winner.as_usize());
 
     if let Some(winner_index) = app_state.winner_number {

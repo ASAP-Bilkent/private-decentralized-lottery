@@ -1,0 +1,72 @@
+# 🧮 Private Decentralized Lottery
+
+**Private Decentralized Lottery** is a cryptographic protocol developed by the ASAP Research Group at Bilkent University.
+It enables a publicly verifiable lottery system that ensures participant anonymity and fairness without relying on a centralized authority.
+
+## 🛠️ Installation
+
+### Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install)
+- [Node.js](https://nodejs.org/) (for frontend components)
+- [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/) (for package management)
+
+### Environment Variables
+
+Before building and running the project, create a `.env` file in the root directory and add the following values:
+
+```
+PRIVATE_KEY="your private key"
+RPC_URL="https://sepolia.infura.io/v3/yourcustomurl"
+```
+
+### Backend Setup
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/ASAP-Bilkent/private-decentralized-lottery.git
+   cd private-decentralized-lottery
+   ```
+
+2. **Install Dependencies and Build**
+
+   ```bash
+   cargo build --release
+   ```
+
+3. **Run the Backend**
+
+   ```bash
+   cargo run
+   ```
+
+### Frontend Setup
+
+1. **Navigate to the Frontend Directory**
+
+   ```bash
+   cd frontend
+   ```
+
+2. **Install Dependencies**
+
+   ```bash
+   yarn install
+   ```
+
+3. **Build the Frontend**
+
+   ```bash
+   yarn build
+   ```
+
+4. **Start the Frontend**
+
+   ```bash
+   yarn start
+   ```
+
+---
+
+Feel free to customize this file further to align with your project's specifics.
