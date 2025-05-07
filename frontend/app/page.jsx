@@ -1,5 +1,8 @@
 "use client";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const LotteryComponent = () => {
   const [name, setName] = useState("");
@@ -88,58 +91,38 @@ const LotteryComponent = () => {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl mb-4">Lottery System</h1>
-
-      <div className="mb-4">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter name"
-          className="border px-2 py-1 text-black"
-        />
-      </div>
-
-      <button
-        onClick={handleAddName}
-        className="mr-2 px-4 py-2 bg-blue-500 text-white"
-      >
-        Add Name
-      </button>
-      <button
-        onClick={handleStartLottery}
-        className="mr-2 px-4 py-2 bg-green-500 text-white"
-      >
-        Start Lottery
-      </button>
-      <button
-        onClick={handleAnnounceWinner}
-        className="mr-2 px-4 py-2 bg-yellow-500 text-white"
-      >
-        Announce Winner
-      </button>
-      <button
-        onClick={handleVerifyName}
-        className="px-4 py-2 bg-red-500 text-white"
-      >
-        Verify Name
-      </button>
-
-      <div className="mt-4">
-        <p>Status: {lotteryStatus}</p>
-        <p>Verify Status: {verifyStatus}</p>
-        <p>Winner: {winner}</p>
-      </div>
-
-      <div className="mt-4">
-        <h2>Names in the lottery:</h2>
-        <ul>
-          {namesList.map((n, index) => (
-            <li key={index}>{n}</li>
-          ))}
-        </ul>
-      </div>
+    <div className="flex justify-center items-center h-screen">
+      <Card className="w-96 p-4 shadow-xl">
+        <CardHeader>
+          <CardTitle className="text-xl">Lottery System</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter name"
+            className="mb-2"
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <Button onClick={handleAddName}>Add Name</Button>
+            <Button onClick={handleStartLottery}>Start Lottery</Button>
+            <Button onClick={handleAnnounceWinner}>Announce Winner</Button>
+            <Button onClick={handleVerifyName}>Verify Name</Button>
+          </div>
+          <div className="mt-4 space-y-2">
+            <p>Status: {lotteryStatus}</p>
+            <p>Verify Status: {verifyStatus}</p>
+            <p>Winner: {winner}</p>
+            <h3 className="mt-2">Names in the lottery:</h3>
+            <ul className="list-disc pl-5">
+              {namesList.map((n, index) => (
+                <li key={index}>{n}</li>
+              ))}
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
