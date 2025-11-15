@@ -1,4 +1,4 @@
-# 🧮 Private Decentralized Lottery
+# ⚫ Private Decentralized Lottery
 
 **Private Decentralized Lottery** is a cryptographic protocol developed by the ASAP Research Group at Bilkent University.
 It enables a publicly verifiable lottery system that ensures participant anonymity and fairness without relying on a centralized authority.
@@ -9,7 +9,13 @@ It enables a publicly verifiable lottery system that ensures participant anonymi
 
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Node.js](https://nodejs.org/) (for frontend components)
-- [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/) (for package management)
+- [npm](https://www.npmjs.com/) (comes with Node.js)
+
+**Windows-specific requirements:**
+- [MSYS2](https://www.msys2.org/) (required for building on Windows)
+- GCC (install via MSYS2: `pacman -S mingw-w64-x86_64-gcc`)
+
+> **Important:** The repository must be cloned and built in a directory path containing **ASCII characters only**. Non-ASCII characters in the path may cause build issues.
 
 ### Environment Variables
 
@@ -27,6 +33,11 @@ RPC_URL="https://sepolia.infura.io/v3/yourcustomurl"
    ```bash
    git clone https://github.com/ASAP-Bilkent/private-decentralized-lottery.git
    cd private-decentralized-lottery
+   ```
+
+   1.1 **Clone Accumulator Repository**
+   ```bash
+      git clone https://github.com/cambrian/accumulator.git
    ```
 
 2. **Install Dependencies and Build**
@@ -52,19 +63,19 @@ RPC_URL="https://sepolia.infura.io/v3/yourcustomurl"
 2. **Install Dependencies**
 
    ```bash
-   yarn install
+   npm install
    ```
 
 3. **Build the Frontend**
 
    ```bash
-   yarn build
+   npm run build
    ```
 
 4. **Start the Frontend**
 
    ```bash
-   yarn start
+   npm start
    ```
 
 ---

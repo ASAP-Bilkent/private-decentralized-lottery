@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 const LotteryComponent = () => {
   const [name, setName] = useState("");
   const [lotteryStatus, setLotteryStatus] = useState("");
@@ -13,7 +15,7 @@ const LotteryComponent = () => {
 
   const handleAddName = async () => {
     try {
-      const response = await fetch("http://localhost:8080/add", {
+      const response = await fetch(`${API_URL}/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,7 +38,7 @@ const LotteryComponent = () => {
   const handleStartLottery = async () => {
     setLotteryStatus("Requesting lottery start...");
     try {
-      const response = await fetch("http://localhost:8080/start_lottery", {
+      const response = await fetch(`${API_URL}/start_lottery`, {
         method: "POST",
       });
 
@@ -53,7 +55,7 @@ const LotteryComponent = () => {
 
   const handleAnnounceWinner = async () => {
     try {
-      const response = await fetch("http://localhost:8080/announce_winner", {
+      const response = await fetch(`${API_URL}/announce_winner`, {
         method: "GET",
       });
 
@@ -71,7 +73,7 @@ const LotteryComponent = () => {
 
   const handleVerifyName = async () => {
     try {
-      const response = await fetch("http://localhost:8080/verify", {
+      const response = await fetch(`${API_URL}/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
