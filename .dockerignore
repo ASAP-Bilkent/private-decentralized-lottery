@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Node modules
+node_modules
+frontend/node_modules
+docs/node_modules
+
+# Build artifacts
+target
+frontend/.next
+frontend/out
+docs/.next
+docs/out
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+*.pem
+*.key
+
