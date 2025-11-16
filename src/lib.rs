@@ -19,12 +19,17 @@ pub async fn request_vrf(commitment: H256) -> Result<(), Box<dyn std::error::Err
     dotenv().ok();
 
     let vrf_contract: H160 = "0xC811D13F35A3240e0Fcf7D28Ed0A92f617B44752".parse::<Address>()?;
-    let priv_key: String = env::var("PRIVATE_KEY").unwrap();
-    let rpc_url: String = env::var("RPC_URL").unwrap();
+    let priv_key: String = env::var("PRIVATE_KEY")
+        .map_err(|_| -> Box<dyn std::error::Error> { "PRIVATE_KEY environment variable not set. Please set it in your .env file.".into() })?;
+    let rpc_url: String = env::var("RPC_URL")
+        .map_err(|_| -> Box<dyn std::error::Error> { "RPC_URL environment variable not set. Please set it in your .env file.".into() })?;
     let provider: Provider<Http> = Provider::<Http>::try_from(rpc_url)?;
 
     let wallet = priv_key
-        .parse::<LocalWallet>()?
+        .parse::<LocalWallet>()
+        .map_err(|e| -> Box<dyn std::error::Error> { 
+            format!("Failed to parse PRIVATE_KEY as hex. Make sure it's a valid 64-character hex string (without '0x' prefix). Error: {}", e).into()
+        })?
         .with_chain_id(Chain::Sepolia);
     let client = SignerMiddleware::new(provider.clone(), wallet.clone());
 
@@ -46,12 +51,17 @@ pub async fn get_random_number(commitment: H256) -> Result<U256, Box<dyn std::er
     dotenv().ok();
 
     let contract_address = "0xC811D13F35A3240e0Fcf7D28Ed0A92f617B44752".parse::<Address>()?;
-    let priv_key = env::var("PRIVATE_KEY").unwrap();
-    let rpc_url = env::var("RPC_URL").unwrap();
+    let priv_key = env::var("PRIVATE_KEY")
+        .map_err(|_| -> Box<dyn std::error::Error> { "PRIVATE_KEY environment variable not set. Please set it in your .env file.".into() })?;
+    let rpc_url = env::var("RPC_URL")
+        .map_err(|_| -> Box<dyn std::error::Error> { "RPC_URL environment variable not set. Please set it in your .env file.".into() })?;
     let provider = Provider::<Http>::try_from(rpc_url)?;
 
     let wallet = priv_key
-        .parse::<LocalWallet>()?
+        .parse::<LocalWallet>()
+        .map_err(|e| -> Box<dyn std::error::Error> { 
+            format!("Failed to parse PRIVATE_KEY as hex. Make sure it's a valid 64-character hex string (without '0x' prefix). Error: {}", e).into()
+        })?
         .with_chain_id(Chain::Sepolia);
     let client = SignerMiddleware::new(provider.clone(), wallet.clone());
 
