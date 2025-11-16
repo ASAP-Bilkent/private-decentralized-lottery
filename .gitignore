@@ -4,3 +4,4 @@
 accumulator
 frontend/package-lock.json
 frontend/yarn.lock
+restart-backend.bat

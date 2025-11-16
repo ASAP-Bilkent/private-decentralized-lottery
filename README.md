@@ -3,6 +3,8 @@
 **Private Decentralized Lottery** is a cryptographic protocol developed by the ASAP Research Group at Bilkent University.
 It enables a publicly verifiable lottery system that ensures participant anonymity and fairness without relying on a centralized authority.
 
+📖 **[View Documentation on GitHub Pages](https://asap-bilkent.github.io/private-decentralized-lottery/)**
+
 ## 🛠️ Installation
 
 ### Prerequisites
@@ -77,6 +79,17 @@ RPC_URL="https://sepolia.infura.io/v3/yourcustomurl"
    ```bash
    npm start
    ```
+
+## 📚 Documentation
+
+The project documentation is available on [GitHub Pages](https://asap-bilkent.github.io/private-decentralized-lottery/). The documentation site is automatically deployed when changes are pushed to the `main` branch.
+
+To enable GitHub Pages deployment:
+1. Go to your repository **Settings** → **Pages**
+2. Under **Source**, select **GitHub Actions**
+3. Save the settings
+
+The deployment workflow (`.github/workflows/deploy-docs.yml`) will automatically build and deploy the documentation site whenever changes are made to the `docs/` directory.
 
 ---
 
