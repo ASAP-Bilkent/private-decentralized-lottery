@@ -23,6 +23,9 @@ COPY accumulator ./accumulator
 COPY src ./src
 COPY benches ./benches
 
+# Copy abi.json file
+COPY abi.json ./abi.json
+
 # Build the application in release mode
 RUN cargo build --release
 
@@ -39,6 +42,9 @@ WORKDIR /app
 
 # Copy the binary from builder
 COPY --from=builder /app/target/release/private-decentralized-lottery /app/private-decentralized-lottery
+
+# Copy abi.json to runtime stage
+COPY --from=builder /app/abi.json /app/abi.json
 
 # Expose the port
 EXPOSE 8080
